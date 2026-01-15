@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, intl
+    
+    - name: Install Composer Dependencies
+      run: composer install --no-dev --optimize-autoloader
+
+    - name: Archive Production Artifact
+      run: |
+        zip -r sheller-${{ github.ref_name }}.zip . -x ".git/*" ".github/*" "tests/*" "phpunit.xml" ".env.example" ".env"
+    
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: sheller-${{ github.ref_name }}.zip
+        generate_release_notes: true
